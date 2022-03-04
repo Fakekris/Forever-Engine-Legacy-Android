@@ -16,11 +16,11 @@ class Timings
 	// from left to right
 	// max milliseconds, score from it and percentage
 	public static var judgementsMap:Map<String, Array<Dynamic>> = [
-		"sick" => [0, 55, 350, 100, ' [SFC]'],
-		"good" => [1, 80, 150, 75, ' [GFC]'],
-		"bad" => [2, 100, 0, 25, ' [FC]'],
-		"shit" => [3, 120, -50, -150],
-		"miss" => [4, 140, -100, -175],
+		"sick" => [0, 50, 350, 100, 3],
+		"good" => [1, 100, 150, 75, 2],
+		"bad" => [2, 120, 0, 25, 1],
+		"shit" => [3, 140, -50, -150, 0],
+		"miss" => [4, 180, -100, -175, 0],
 	];
 
 	public static var msThreshold:Float = 0;
@@ -37,10 +37,24 @@ class Timings
 		"f" => 65,
 	];
 
+	// set the score judgements for later use
+	public static var scoreIndex:Map<Int, Int> = [
+		7 => 100,
+		6 => 95,
+		5 => 90,
+		4 => 85,
+		3 => 80,
+		2 => 75,
+		1 => 70,
+		0 => 65,
+	];
+
+	public static var ratingIntFinal:Int = 0;
 	public static var ratingFinal:String = "f";
 	public static var notesHit:Int = 0;
-	public static var segmentsHit:Int = 0;
-	public static var comboDisplay:String = '';
+
+	public static var comboDisplay:Int = 0;
+	public static var notesHitNoSus:Int = 0;
 
 	public static var gottenJudgements:Map<String, Int> = [];
 	public static var smallestRating:String;
@@ -65,11 +79,11 @@ class Timings
 		smallestRating = 'sick';
 
 		notesHit = 0;
-		segmentsHit = 0;
+		notesHitNoSus = 0;
 
 		ratingFinal = "f";
 
-		comboDisplay = '';
+		comboDisplay = 0;
 	}
 
 	/*
@@ -87,14 +101,12 @@ class Timings
 		}
 	}
 
-	public static function updateAccuracy(judgement:Int, ?isSustain:Bool = false, ?segmentCount:Int = 1)
+	public static function updateAccuracy(judgement:Int, isSustain:Bool = false)
 	{
-		if (!isSustain) {
-			notesHit++;
-			accuracy += (Math.max(0, judgement));
-		} else {
-			accuracy += (Math.max(0, judgement) / segmentCount);
-		}
+		notesHit++;
+		if (!isSustain)
+			notesHitNoSus++;
+		accuracy += Math.max(0, judgement);
 		trueAccuracy = (accuracy / notesHit);
 
 		updateFCDisplay();
@@ -104,7 +116,7 @@ class Timings
 	public static function updateFCDisplay()
 	{
 		// update combo display
-		comboDisplay = '';
+		comboDisplay = 0;
 		if (judgementsMap.get(smallestRating)[4] != null)
 			comboDisplay = judgementsMap.get(smallestRating)[4];
 
@@ -119,6 +131,7 @@ class Timings
 
 	public static function updateScoreRating()
 	{
+		updateScoreIntRating();
 		var biggest:Int = 0;
 		for (score in scoreRating.keys())
 		{
@@ -126,6 +139,19 @@ class Timings
 			{
 				biggest = scoreRating.get(score);
 				ratingFinal = score;
+			}
+		}
+	}
+
+	public static function updateScoreIntRating()
+	{
+		var biggest:Int = 0;
+		for (score in scoreIndex.keys())
+		{
+			if ((scoreIndex.get(score) <= trueAccuracy) && (scoreIndex.get(score) >= biggest))
+			{
+				biggest = scoreIndex.get(score);
+				ratingIntFinal = score;
 			}
 		}
 	}
