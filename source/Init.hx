@@ -1,6 +1,5 @@
 import flixel.FlxG;
 import flixel.FlxState;
-import flixel.addons.transition.FlxTransitionableState;
 import flixel.graphics.FlxGraphic;
 import flixel.input.keyboard.FlxKey;
 import meta.CoolUtil;
@@ -9,6 +8,7 @@ import meta.data.Highscore;
 import meta.data.dependency.Discord;
 import meta.state.*;
 import meta.state.charting.*;
+import meta.state.menus.*;
 import openfl.filters.BitmapFilter;
 import openfl.filters.ColorMatrixFilter;
 
@@ -51,9 +51,9 @@ class Init extends FlxState
 			NOT_FORCED
 		],
 		'Auto Pause' => [true, Checkmark, '', NOT_FORCED],
-		'FPS Counter' => [true, Checkmark, 'Whether to display the FPS counter.', NOT_FORCED],
+		'FPS Counter' => [false, Checkmark, 'Whether to display the FPS counter.', NOT_FORCED],
 		'Memory Counter' => [
-			true,
+			false,
 			Checkmark,
 			'Whether to display approximately how much memory is being used.',
 			NOT_FORCED
@@ -65,25 +65,11 @@ class Init extends FlxState
 			'Whether to reduce movements, like icons bouncing or beat zooms in gameplay.',
 			NOT_FORCED
 		],
-		'Stage Opacity' => [
+		'Stage Darkness' => [
 			Checkmark,
 			Selector,
 			'Darkens non-ui elements, useful if you find the characters and backgrounds distracting.',
 			NOT_FORCED
-		],
-		'Opacity Type' => [
-			'UI',
-			Selector,
-			'Choose whether the filter will be behind the notes or the UI',
-			NOT_FORCED,
-			['UI', 'Notes']
-		],
-		'Counter' => [
-			'None',
-			Selector,
-			'Choose whether you want somewhere to display your judgements, and where you want it.',
-			NOT_FORCED,
-			['None', 'Left', 'Right']
 		],
 		'Display Accuracy' => [true, Checkmark, 'Whether to display your accuracy on screen.', NOT_FORCED],
 		'Disable Antialiasing' => [
@@ -119,8 +105,6 @@ class Init extends FlxState
 			NOT_FORCED,
 			['none', 'Deuteranopia', 'Protanopia', 'Tritanopia']
 		],
-		"Clip Style" => ['stepmania', Selector, "Chooses a style for hold note clippings; StepMania: Holds under Receptors; FNF: Holds over receptors", NOT_FORCED, 
-			['StepMania', 'FNF']],
 		"UI Skin" => ['default', Selector, 'Choose a UI Skin for judgements, combo, etc.', NOT_FORCED, ''],
 		"Note Skin" => ['default', Selector, 'Choose a note skin.', NOT_FORCED, ''],
 		"Framerate Cap" => [120, Selector, 'Define your maximum FPS.', NOT_FORCED, ['']],
@@ -158,7 +142,12 @@ class Init extends FlxState
 			"Simplifies the judgement animations, displaying only one judgement / rating sprite at a time.",
 			NOT_FORCED
 		],
-
+		'Quant Notes' => [
+			false,
+			Checkmark,
+			"lol this wont show in-game im not writing shit here",
+			NOT_FORCED
+		]
 
 	];
 
@@ -173,11 +162,7 @@ class Init extends FlxState
 		'ACCEPT' => [[FlxKey.SPACE, Z, FlxKey.ENTER], 4],
 		'BACK' => [[FlxKey.BACKSPACE, X, FlxKey.ESCAPE], 5],
 		'PAUSE' => [[FlxKey.ENTER, P], 6],
-		'RESET' => [[R, null], 13],
-		'UI_UP' => [[FlxKey.UP, W], 8],
-		'UI_DOWN' => [[FlxKey.DOWN, S], 9],
-		'UI_LEFT' => [[FlxKey.LEFT, A], 10],
-		'UI_RIGHT' => [[FlxKey.RIGHT, D], 11],
+		'RESET' => [[R, null], 7]
 	];
 
 	public static var filters:Array<BitmapFilter> = []; // the filters the game has active
@@ -214,10 +199,6 @@ class Init extends FlxState
 
 	override public function create():Void
 	{
-                #if android
-		FlxG.android.preventDefaultKeys = [BACK];
-		#end
-
 		FlxG.save.bind('foreverengine-options');
 		Highscore.load();
 
@@ -235,17 +216,14 @@ class Init extends FlxState
 		FlxG.fixedTimestep = false; // This ensures that the game is not tied to the FPS
 		FlxG.mouse.useSystemCursor = true; // Use system cursor because it's prettier
 		FlxG.mouse.visible = false; // Hide mouse on start
-		FlxGraphic.defaultPersist = true; // make sure we control all of the memory
-		
+
+		// Main.switchState(this, new TestState());
 		gotoTitleScreen();
 	}
 
 	private function gotoTitleScreen()
-	{	
-		if (trueSettings.get("Custom Titlescreen"))
-			Main.switchState(this, new CustomTitlescreen());
-		else
-			Main.switchState(this, new TitleState());
+	{
+		Main.switchState(this, new MainMenuState());
 	}
 
 	public static function loadSettings():Void
@@ -273,18 +251,16 @@ class Init extends FlxState
 			|| trueSettings.get("Framerate Cap") > 360)
 			trueSettings.set("Framerate Cap", 30);
 
-		if (!Std.isOfType(trueSettings.get("Stage Opacity"), Int)
-			|| trueSettings.get("Stage Opacity") < 0
-			|| trueSettings.get("Stage Opacity") > 100)
-			trueSettings.set("Stage Opacity", 100);
+		if (!Std.isOfType(trueSettings.get("Stage Darkness"), Int)
+			|| trueSettings.get("Stage Darkness") < 0
+			|| trueSettings.get("Stage Darkness") > 100)
+			trueSettings.set("Stage Darkness", 0);
 
 		// 'hardcoded' ui skins
 		gameSettings.get("UI Skin")[4] = CoolUtil.returnAssetsLibrary('UI');
-		if (!gameSettings.get("UI Skin")[4].contains(trueSettings.get("UI Skin")))
-			trueSettings.set("UI Skin", 'default');
+		trueSettings.set("UI Skin", 'default');
 		gameSettings.get("Note Skin")[4] = CoolUtil.returnAssetsLibrary('noteskins/notes');
-		if (!gameSettings.get("Note Skin")[4].contains(trueSettings.get("Note Skin")))
-			trueSettings.set("Note Skin", 'default');
+		trueSettings.set("Note Skin", 'default');
 
 		saveSettings();
 

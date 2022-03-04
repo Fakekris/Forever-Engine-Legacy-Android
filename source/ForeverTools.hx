@@ -4,7 +4,6 @@ import flixel.FlxG;
 import flixel.system.FlxSound;
 import meta.data.*;
 import openfl.utils.Assets;
-import sys.FileSystem;
 
 /**
 	This class is used as an extension to many other forever engine stuffs, please don't delete it as it is not only exclusively used in forever engine
@@ -13,29 +12,47 @@ import sys.FileSystem;
 class ForeverTools
 {
 	// set up maps and stuffs
-	public static function resetMenuMusic(resetVolume:Bool = false)
+	public static function resetMenuMusic(resetVolume:Bool = true)
 	{
-		// make sure the music is playing
-		if (((FlxG.sound.music != null) && (!FlxG.sound.music.playing)) || (FlxG.sound.music == null))
-		{
-			var song = (Init.trueSettings.get("Custom Titlescreen") ? Paths.music('foreverMenu') : Paths.music('freakyMenu'));
-			FlxG.sound.playMusic(song, (resetVolume) ? 0 : 0.7);
-			if (resetVolume)
-				FlxG.sound.music.fadeIn(4, 0, 0.7);
-			// placeholder bpm
-			Conductor.changeBPM(102);
-		}
+		// // make sure the music is playing
+		// if (((FlxG.sound.music != null) && (!FlxG.sound.music.playing))
+		// 	|| (FlxG.sound.music == null))
+		// {
+		var song = Paths.music('freakyMenu');
+		FlxG.sound.playMusic(song, 0.7);
+		FlxG.sound.music.volume = 0.7;
+		// placeholder bpm
+		Conductor.changeBPM(89);
+		// }
 		//
+	}
+
+	// set up maps and stuffs
+	public static function playFreeplayMusic(resetVolume:Bool = true)
+	{	
+		var song = Paths.music('freeplayMenu');
+		FlxG.sound.playMusic(song, 0.55);
+		// placeholder bpm
+		Conductor.changeBPM(89);
+	}
+
+	// set up maps and stuffs
+	public static function playOptionsMusic(resetVolume:Bool = true)
+	{
+		var song = Paths.music('optionsMenu');
+		FlxG.sound.playMusic(song, 0.55);
+		// placeholder bpm
+		Conductor.changeBPM(89);
 	}
 
 	public static function returnSkinAsset(asset:String, assetModifier:String = 'base', changeableSkin:String = 'default', baseLibrary:String,
 			?defaultChangeableSkin:String = 'default', ?defaultBaseAsset:String = 'base'):String
 	{
 		var realAsset = '$baseLibrary/$changeableSkin/$assetModifier/$asset';
-		if (!FileSystem.exists(Main.getDataPath() + Paths.getPath('images/' + realAsset + '.png', IMAGE)))
+		if (!Assets.exists(Paths.image(realAsset)))
 		{
 			realAsset = '$baseLibrary/$defaultChangeableSkin/$assetModifier/$asset';
-			if (!FileSystem.exists(Main.getDataPath() + Paths.getPath('images/' + realAsset + '.png', IMAGE)))
+			if (!Assets.exists(Paths.image(realAsset)))
 				realAsset = '$baseLibrary/$defaultChangeableSkin/$defaultBaseAsset/$asset';
 		}
 

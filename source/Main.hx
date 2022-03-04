@@ -5,7 +5,6 @@ import flixel.FlxG;
 import flixel.FlxGame;
 import flixel.FlxSprite;
 import flixel.FlxState;
-import flixel.addons.transition.FlxTransitionableState;
 import flixel.util.FlxColor;
 import haxe.CallStack.StackItem;
 import haxe.CallStack;
@@ -14,8 +13,6 @@ import lime.app.Application;
 import meta.*;
 import meta.data.PlayerSettings;
 import meta.data.dependency.Discord;
-import meta.data.dependency.FNFTransition;
-import meta.data.dependency.FNFUIState;
 import openfl.Assets;
 import openfl.Lib;
 import openfl.display.FPS;
@@ -25,10 +22,6 @@ import openfl.events.UncaughtErrorEvent;
 import sys.FileSystem;
 import sys.io.File;
 import sys.io.Process;
-#if android //only android will use those
-import lime.system.System;
-import android.*;
-#end
 
 // Here we actually import the states and metadata, and just the metadata.
 // It's nice to have modularity so that we don't have ALL elements loaded at the same time.
@@ -69,18 +62,13 @@ class Main extends Sprite
 		>	fair warning I'm not a very good programmer
 	 */
 	// class action variables
-	public static var gameWidth:Int = 1280; // Width of the game in pixels (might be less / more in actual pixels depending on your zoom).
+	public static var gameWidth:Int = 960; // Width of the game in pixels (might be less / more in actual pixels depending on your zoom).
 	public static var gameHeight:Int = 720; // Height of the game in pixels (might be less / more in actual pixels depending on your zoom).
 
 	public static var mainClassState:Class<FlxState> = Init; // Determine the main class state of the game
 	public static var framerate:Int = 120; // How many frames per second the game should run at.
 
-	public static var gameVersion:String = '0.3';
-
-	#if android//the things android uses  
-        private static var androidDir:String = null;
-        private static var storagePath:String = AndroidTools.getExternalStorageDirectory();  
-        #end
+	public static var gameVersion:String = '0.2.4.2';
 
 	var zoom:Float = -1; // If -1, zoom is automatically calculated to fit the window dimensions.
 	var skipSplash:Bool = true; // Whether to skip the flixel splash screen that appears in release mode.
@@ -96,64 +84,22 @@ class Main extends Sprite
 		[ [songs to use], [characters in songs], [color of week], name of week ]
 	**/
 	public static var gameWeeks:Array<Dynamic> = [
-		[['Tutorial'], ['gf'], [FlxColor.fromRGB(129, 100, 223)], 'Funky Beginnings'],
 		[
-			['Bopeebo', 'Fresh', 'Dadbattle'],
+			['Mushroom-Plains', 'Bricks-And-Lifts', 'Lethal-Lava-Lair'],
 			['dad', 'dad', 'dad'],
 			[FlxColor.fromRGB(129, 100, 223)],
-			'vs. DADDY DEAREST'
+			'super mario bros in unreal engine 4'
 		],
 		[
-			['Spookeez', 'South', 'Monster'],
-			['spooky', 'spooky', 'monster'],
-			[FlxColor.fromRGB(30, 45, 60)],
-			'Spooky Month'
-		],
-		[
-			['Pico', 'Philly-Nice', 'Blammed'],
-			['pico'],
-			[FlxColor.fromRGB(111, 19, 60)],
-			'vs. Pico'
-		],
-		[
-			['Satin-Panties', 'High', 'Milf'],
-			['mom'],
-			[FlxColor.fromRGB(203, 113, 170)],
-			'MOMMY MUST MURDER'
-		],
-		[
-			['Cocoa', 'Eggnog', 'Winter-Horrorland'],
-			['parents-christmas', 'parents-christmas', 'monster-christmas'],
-			[FlxColor.fromRGB(141, 165, 206)],
-			'RED SNOW'
-		],
-		[
-			['Senpai', 'Roses', 'Thorns'],
-			['senpai', 'senpai', 'spirit'],
-			[FlxColor.fromRGB(206, 106, 169)],
-			"hating simulator ft. moawling"
-		],
+			['2-PLAYER-GAME'],
+			['dad', 'dad', 'dad'],
+			[FlxColor.fromRGB(129, 100, 223)],
+			'go weegee go weegee go weegee'
+		]
 	];
 
 	// most of these variables are just from the base game!
 	// be sure to mess around with these if you'd like.
-
-        static public function getDataPath():String
-        {
-        	#if android
-                if (androidDir != null && androidDir.length > 0) 
-                {
-                        return androidDir;
-                } 
-                else 
-                { 
-                        androidDir = storagePath + "/" + Application.current.meta.get("packageName") + "/files/";
-                }
-                return androidDir;
-                #else
-                return "";
-	        #end
-        }
 
 	public static function main():Void
 	{
@@ -196,39 +142,6 @@ class Main extends Sprite
 			// if set to negative one, it is done so automatically, which is the default.
 		}
 
-		FlxTransitionableState.skipNextTransIn = true;
-
-                #if android
-                if (AndroidTools.getSDKversion() > 23 || AndroidTools.getSDKversion() == 23) {
-		    AndroidTools.requestPermissions([Permissions.READ_EXTERNAL_STORAGE, Permissions.WRITE_EXTERNAL_STORAGE]);
-		}  
-
-                var grantedPermsList:Array<Permissions> = AndroidTools.getGrantedPermissions();    
-
-                if (!grantedPermsList.contains(Permissions.READ_EXTERNAL_STORAGE) || !grantedPermsList.contains(Permissions.WRITE_EXTERNAL_STORAGE)) {
-                	if (AndroidTools.getSDKversion() > 23 || AndroidTools.getSDKversion() == 23) {
-                        	Application.current.window.alert("If you accepted the permisions for storage good, you can continue, if you not the game can't run without storage permissions please grant them in app settings" + "\n" + "Press Ok To Close The App","Permissions");
-                                Sys.exit(0);//Will close the game
-		        } else {
-                        	Application.current.window.alert("game can't run without storage permissions please grant them in app settings" + "\n" + "Press Ok To Close The App","Permissions");
-                                Sys.exit(0);//Will close the game
-		        }
-                }
-                else
-                {
-                        if (!FileSystem.exists(storagePath + "/" + Application.current.meta.get("packageName"))) {
-                                FileSystem.createDirectory(storagePath + "/" + Application.current.meta.get("packageName"));
-                        } 
-                        if (!FileSystem.exists(storagePath + "/" + Application.current.meta.get("packageName") + '/files')) {
-                                FileSystem.createDirectory(storagePath + "/" + Application.current.meta.get("packageName") + '/files');
-                        }
-                        if (!FileSystem.exists(Main.getDataPath() + "assets")) {
-                                Application.current.window.alert("Try copying assets/assets from apk to" + Application.current.meta.get("packageName") + " In your internal storage" + "\n" + "Press Ok To Close The App", "Instructions");
-                                Sys.exit(0);//Will close the game
-                        }
-                }
-                #end
-		
 		// here we set up the base game
 		var gameCreate:FlxGame;
 		gameCreate = new FlxGame(gameWidth, gameHeight, mainClassState, zoom, framerate, framerate, skipSplash);
@@ -265,19 +178,17 @@ class Main extends Sprite
 
 	public static function switchState(curState:FlxState, target:FlxState)
 	{
-		// Custom made Trans in
+		// this is for a dumb feature that has no use except for cool extra info
+		// though I suppose this could be of use to people who want to load things between classes and such
+
+		// save the last state for comparison checks
+		lastState = curState;
+
+		// credit for the idea and a bit of the execution https://github.com/ninjamuffin99/Funkin/pull/1083
 		mainClassState = Type.getClass(target);
-		if (!FlxTransitionableState.skipNextTransIn)
-		{
-			curState.openSubState(new FNFTransition(0.35, false));
-			FNFTransition.finishCallback = function() {
-				FlxG.switchState(target);
-			};
-			return trace('changed state');
-		}
-		FlxTransitionableState.skipNextTransIn = false;
+
 		// load the state
-		FlxG.switchState(target);		
+		FlxG.switchState(target);
 	}
 
 	public static function updateFramerate(newFramerate:Int)
@@ -294,6 +205,25 @@ class Main extends Sprite
 			FlxG.updateFramerate = newFramerate;
 		}
 	}
+
+	public static function dumpCache()
+	{
+		///* SPECIAL THANKS TO HAYA
+		@:privateAccess
+		for (key in FlxG.bitmap._cache.keys())
+		{
+			var obj = FlxG.bitmap._cache.get(key);
+			if (obj != null)
+			{
+				Assets.cache.removeBitmapData(key);
+				FlxG.bitmap._cache.remove(key);
+				obj.destroy();
+			}
+		}
+		Assets.cache.clear("songs");
+		// */
+	}
+	
 
 	function onCrash(e:UncaughtErrorEvent):Void
 	{
@@ -320,10 +250,10 @@ class Main extends Sprite
 
 		errMsg += "\nUncaught Error: " + e.error + "\nPlease report this error to the GitHub page: https://github.com/Yoshubs/Forever-Engine";
 
-		if (!FileSystem.exists(Main.getDataPath() + "./crash/"))
-			FileSystem.createDirectory(Main.getDataPath() + "./crash/");
+		if (!FileSystem.exists("./crash/"))
+			FileSystem.createDirectory("./crash/");
 
-		File.saveContent(Main.getDataPath() + path, errMsg + "\n");
+		File.saveContent(path, errMsg + "\n");
 
 		Sys.println(errMsg);
 		Sys.println("Crash dump saved in " + Path.normalize(path));
@@ -334,7 +264,7 @@ class Main extends Sprite
 		crashDialoguePath += ".exe";
 		#end
 
-		if (FileSystem.exists(Main.getDataPath() + "./" + crashDialoguePath))
+		if (FileSystem.exists("./" + crashDialoguePath))
 		{
 			Sys.println("Found crash dialog: " + crashDialoguePath);
 

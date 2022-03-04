@@ -66,6 +66,7 @@ class ForeverAssets
 		newSprite.acceleration.y = FlxG.random.int(200, 300);
 		newSprite.velocity.y = -FlxG.random.int(140, 160);
 		newSprite.velocity.x = FlxG.random.float(-5, 5);}
+		newSprite.visible = false;
 
 		return newSprite;
 	}
@@ -77,8 +78,8 @@ class ForeverAssets
 		var height = 163;
 		if (assetModifier == 'pixel')
 		{
-			width = 72;
-			height = 32;
+			width = 24;
+			height = 8;
 		}
 		var rating:FlxSprite = new FlxSprite().loadGraphic(Paths.image(ForeverTools.returnSkinAsset('judgements', assetModifier, changeableSkin,
 			baseLibrary)), true, width, height);
@@ -87,14 +88,6 @@ class ForeverAssets
 			default:
 				rating.alpha = 1;
 				rating.screenCenter();
-				rating.x = (FlxG.width * 0.55) - 40;
-				rating.y -= 60;
-				if (!Init.trueSettings.get('Simply Judgements'))
-				{
-				rating.acceleration.y = 550;
-				rating.velocity.y = -FlxG.random.int(140, 175);
-				rating.velocity.x = -FlxG.random.int(0, 10);
-				}
 				rating.animation.add('base', [
 					Std.int((Timings.judgementsMap.get(asset)[0] * 2) + (perfectSick ? 0 : 2) + (timing == 'late' ? 1 : 0))
 				], 24, false);
@@ -102,7 +95,7 @@ class ForeverAssets
 		}
 
 		if (assetModifier == 'pixel')
-			rating.setGraphicSize(Std.int(rating.width * PlayState.daPixelZoom * 0.7));
+			rating.setGraphicSize(Std.int(rating.width * 6));
 		else
 		{
 			rating.antialiasing = true;
@@ -112,25 +105,47 @@ class ForeverAssets
 		return rating;
 	}
 
-	public static function generateNoteSplashes(asset:String, assetModifier:String = 'base', changeableSkin:String = 'default', baseLibrary:String, noteData:Int):NoteSplash
+	public static function generateNoteSplashes(asset:String, assetModifier:String = 'base', baseLibrary:String, noteData:Int):NoteSplash
 	{
 		//
 		var tempSplash:NoteSplash = new NoteSplash(noteData);
+		
 		switch (assetModifier)
 		{
 			case 'pixel':
-				tempSplash.loadGraphic(Paths.image(ForeverTools.returnSkinAsset('splash-pixel', assetModifier, changeableSkin, baseLibrary)), true, 34,
-					34);
-				tempSplash.animation.add('anim1', [noteData, 4 + noteData, 8 + noteData, 12 + noteData], 24, false);
-				tempSplash.animation.add('anim2', [16 + noteData, 20 + noteData, 24 + noteData, 28 + noteData], 24, false);
+				var noteskin = "default";
+				if (Init.trueSettings.get("Quant Notes"))
+					noteskin = "quant";
+				tempSplash.loadGraphic(Paths.image(ForeverTools.returnSkinAsset('splash-pixel', assetModifier, noteskin,
+					'noteskins/notes')), true, 23,
+					22);
+				tempSplash.animation.add('anim1', [
+					0 + noteData, 
+					4 + noteData, 
+					8 + noteData, 
+					12 + noteData,  
+					12 + noteData], 
+				24, false);
+				tempSplash.animation.add('anim2', [
+					0 + noteData, 
+					4 + noteData, 
+					8 + noteData, 
+					12 + noteData,   
+					12 + noteData], 
+				24, false);
 				tempSplash.animation.play('anim1');
-				tempSplash.addOffset('anim1', -120, -90);
-				tempSplash.addOffset('anim2', -120, -90);
+				tempSplash.addOffset('anim1', -(18 * 6), -(18 * 6));
+				tempSplash.addOffset('anim2', -(18 * 6), -(18 * 6));
 				tempSplash.setGraphicSize(Std.int(tempSplash.width * PlayState.daPixelZoom));
 
 			default:
 				// 'UI/$assetModifier/notes/noteSplashes'
-				tempSplash.loadGraphic(Paths.image(ForeverTools.returnSkinAsset('noteSplashes', assetModifier, changeableSkin, baseLibrary)), true, 210, 210);
+				var noteskin = "default";
+				if (Init.trueSettings.get("Quant Notes"))
+					noteskin = "quant";
+				tempSplash.loadGraphic(Paths.image(ForeverTools.returnSkinAsset('noteSplashes', assetModifier, noteskin,
+					'noteskins/notes')), true,
+					210, 210);
 				tempSplash.animation.add('anim1', [
 					(noteData * 2 + 1),
 					8 + (noteData * 2 + 1),
@@ -148,6 +163,17 @@ class ForeverAssets
 				tempSplash.animation.play('anim1');
 				tempSplash.addOffset('anim1', -20, -10);
 				tempSplash.addOffset('anim2', -20, -10);
+
+				/*
+					tempSplash.frames = Paths.getSparrowAtlas('UI/$assetModifier/notes/noteSplashes');
+					// get a random value for the note splash type
+					tempSplash.animation.addByPrefix('anim1', 'note impact 1 ' + UIStaticArrow.getColorFromNumber(noteData), 24, false);
+					tempSplash.animation.addByPrefix('anim2', 'note impact 2 ' + UIStaticArrow.getColorFromNumber(noteData), 24, false);
+					tempSplash.animation.play('anim1');
+
+					tempSplash.addOffset('anim1', 16, 16);
+					tempSplash.addOffset('anim2', 16, 16);
+				 */
 		}
 
 		return tempSplash;
@@ -156,6 +182,7 @@ class ForeverAssets
 	public static function generateUIArrows(x:Float, y:Float, ?staticArrowType:Int = 0, assetModifier:String):UIStaticArrow
 	{
 		var newStaticArrow:UIStaticArrow = new UIStaticArrow(x, y, staticArrowType);
+
 		switch (assetModifier)
 		{
 			case 'pixel':
@@ -163,7 +190,10 @@ class ForeverAssets
 				// not even just a cleanliness thing it's just so annoying to tweak if something goes wrong like
 				// genuinely more programmers should make their code more modular
 				var framesArgument:String = "arrows-pixels";
-				newStaticArrow.loadGraphic(Paths.image(ForeverTools.returnSkinAsset('$framesArgument', assetModifier, Init.trueSettings.get("Note Skin"),
+				var noteskin = "default";
+				if (Init.trueSettings.get("Quant Notes"))
+					noteskin = "quant";
+				newStaticArrow.loadGraphic(Paths.image(ForeverTools.returnSkinAsset('$framesArgument', assetModifier, noteskin,
 					'noteskins/notes')), true,
 					17, 17);
 				newStaticArrow.animation.add('static', [staticArrowType]);
@@ -196,8 +226,11 @@ class ForeverAssets
 
 				var framesArgument:String = "NOTE_assets";
 
+				var noteskin = "default";
+				if (Init.trueSettings.get("Quant Notes"))
+					noteskin = "quant";
 				newStaticArrow.frames = Paths.getSparrowAtlas(ForeverTools.returnSkinAsset('$framesArgument', assetModifier,
-					Init.trueSettings.get("Note Skin"), 'noteskins/notes'));
+					noteskin, 'noteskins/notes'));
 
 				newStaticArrow.animation.addByPrefix('static', 'arrow' + stringSect.toUpperCase());
 				newStaticArrow.animation.addByPrefix('pressed', stringSect + ' press', 24, false);
@@ -237,16 +270,18 @@ class ForeverAssets
 	public static function generateArrow(assetModifier, strumTime, noteData, noteType, noteAlt, ?isSustainNote:Bool = false, ?prevNote:Note = null):Note
 	{
 		var newNote:Note;
-		var changeableSkin:String = Init.trueSettings.get("Note Skin");
+		var changeableSkin = "default";
+		if (Init.trueSettings.get("Quant Notes"))
+			changeableSkin = "quant";
 		// gonna improve the system eventually
 		if (changeableSkin.startsWith('quant'))
 			newNote = Note.returnQuantNote(assetModifier, strumTime, noteData, noteType, noteAlt, isSustainNote, prevNote);
 		else
 			newNote = Note.returnDefaultNote(assetModifier, strumTime, noteData, noteType, noteAlt, isSustainNote, prevNote);
 
-		// hold note shit 
-		if (isSustainNote && prevNote != null) {
-			// set note offset
+		// hold note offset
+		if (isSustainNote && prevNote != null)
+		{
 			if (prevNote.isSustainNote)
 				newNote.noteVisualOffset = prevNote.noteVisualOffset;
 			else // calculate a new visual offset based on that note's width and newnote's width
@@ -266,30 +301,31 @@ class ForeverAssets
 		switch (assetModifier)
 		{
 			default:
-				newCheckmark.frames = Paths.getSparrowAtlas(ForeverTools.returnSkinAsset(asset, assetModifier, changeableSkin, baseLibrary));
-				newCheckmark.antialiasing = true;
+				newCheckmark.loadGraphic(Paths.image("menus/pixel/options/checkbox"), true, 5, 5);
+				//frames = Paths.getSparrowAtlas(ForeverTools.returnSkinAsset(asset, assetModifier, changeableSkin, baseLibrary));
+				newCheckmark.antialiasing = false;
 
-				newCheckmark.animation.addByPrefix('false finished', 'uncheckFinished');
-				newCheckmark.animation.addByPrefix('false', 'uncheck', 12, false);
-				newCheckmark.animation.addByPrefix('true finished', 'checkFinished');
-				newCheckmark.animation.addByPrefix('true', 'check', 12, false);
+				newCheckmark.animation.add('false finished', [0]);
+				newCheckmark.animation.add('false', [0], 12, false);
+				newCheckmark.animation.add('true finished', [1]);
+				newCheckmark.animation.add('true', [1], 12, false);
 
 				// for week 7 assets when they decide to exist
 				// animation.addByPrefix('false', 'Check Box unselected', 24, true);
 				// animation.addByPrefix('false finished', 'Check Box unselected', 24, true);
 				// animation.addByPrefix('true finished', 'Check Box Selected Static', 24, true);
 				// animation.addByPrefix('true', 'Check Box selecting animation', 24, false);
-				newCheckmark.setGraphicSize(Std.int(newCheckmark.width * 0.7));
+				newCheckmark.setGraphicSize(Std.int(5 * 6));
 				newCheckmark.updateHitbox();
 
-				///*
-				var offsetByX = 45;
-				var offsetByY = 5;
-				newCheckmark.addOffset('false', offsetByX, offsetByY);
-				newCheckmark.addOffset('true', offsetByX, offsetByY);
-				newCheckmark.addOffset('true finished', offsetByX, offsetByY);
-				newCheckmark.addOffset('false finished', offsetByX, offsetByY);
-				// */
+				// ///*
+				// var offsetByX = 45;
+				// var offsetByY = 5;
+				// newCheckmark.addOffset('false', offsetByX, offsetByY);
+				// newCheckmark.addOffset('true', offsetByX, offsetByY);
+				// newCheckmark.addOffset('true finished', offsetByX, offsetByY);
+				// newCheckmark.addOffset('false finished', offsetByX, offsetByY);
+				// // */
 
 				// addOffset('true finished', 17, 37);
 				// addOffset('true', 25, 57);
