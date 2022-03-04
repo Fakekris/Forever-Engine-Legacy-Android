@@ -9,10 +9,7 @@ import meta.*;
 import meta.data.*;
 import meta.data.Conductor.BPMChangeEvent;
 import meta.data.dependency.FNFUIState;
-#if android
-import flixel.input.actions.FlxActionInput;
-import ui.FlxVirtualPad;
-#end
+import meta.state.PlayState;
 
 /* 
 	Music beat state happens to be the first thing on my list of things to add, it just so happens to be the backbone of
@@ -35,36 +32,12 @@ class MusicBeatState extends FNFUIState
 	inline function get_controls():Controls
 		return PlayerSettings.player1.controls;
 
-        #if android
-	var _virtualpad:FlxVirtualPad;
-	var trackedinputsUI:Array<FlxActionInput> = [];
-	var trackedinputs:Array<FlxActionInput> = [];
-	
-	public function addVirtualPad(?DPad:FlxDPadMode, ?Action:FlxActionMode) {
-		_virtualpad = new FlxVirtualPad(DPad, Action);
-		_virtualpad.alpha = 0.75;
-		add(_virtualpad);
-		controls.setVirtualPadUI(_virtualpad, DPad, Action);
-		trackedinputsUI = controls.trackedinputsUI;
-		controls.trackedinputsUI = [];
-	}
-	
-	override function destroy() {
-		controls.removeFlxInput(trackedinputsUI);
-		controls.removeFlxInput(trackedinputs);		
-		
-		super.destroy();
-	}
-	#end	
-
 	// class create event
 	override function create()
 	{
-		// dump
-		Paths.clearStoredMemory();
-		if ((!Std.isOfType(this,meta.state.PlayState)) 
-		&& (!Std.isOfType(this, meta.state.charting.OriginalChartingState)))
-			Paths.clearUnusedMemory();
+		// dump the cache if you're going elsewhere
+		if (Main.lastState != this)
+			Main.dumpCache();
 
 		if (transIn != null)
 			trace('reg ' + transIn.region);
@@ -87,37 +60,15 @@ class MusicBeatState extends FNFUIState
 
 	public function updateContents()
 	{
+		// everyStep();
+		var oldStep:Int = curStep;
+
 		updateCurStep();
 		updateBeat();
 
-		// delta time bullshit 
-		var trueStep:Int = curStep;
-		for (i in storedSteps)
-			if (i < oldStep)
-				storedSteps.remove(i);
-		for (i in oldStep...trueStep) {
-			if (!storedSteps.contains(i) && i > 0) {
-				curStep = i;
-				stepHit();
-				skippedSteps.push(i);
-			}
-		}
-		if (skippedSteps.length > 0) {
-			trace('skipped steps $skippedSteps');
-			skippedSteps = [];
-		}
-		curStep = trueStep;
-
-		//
-		if (oldStep != curStep && curStep > 0 
-			&& !storedSteps.contains(curStep)) 
+		if (oldStep != curStep && curStep > 0)
 			stepHit();
-		oldStep = curStep;
 	}
-
-	var oldStep:Int = 0;
-	var storedSteps:Array<Int> = [];
-	var skippedSteps:Array<Int> = [];
 
 	public function updateBeat():Void
 	{
@@ -144,13 +95,6 @@ class MusicBeatState extends FNFUIState
 	{
 		if (curStep % 4 == 0)
 			beatHit();
-		
-		// trace('step $curStep');
-
-		if (!storedSteps.contains(curStep))
-			storedSteps.push(curStep);
-		else
-			trace('SOMETHING WENT WRONG??? STEP REPEATED $curStep');
 	}
 
 	public function beatHit():Void
@@ -175,28 +119,6 @@ class MusicBeatSubState extends FlxSubState
 
 	inline function get_controls():Controls
 		return PlayerSettings.player1.controls;
-
-        #if android
-	var _virtualpad:FlxVirtualPad;
-	var trackedinputsUI:Array<FlxActionInput> = [];
-	var trackedinputs:Array<FlxActionInput> = [];
-	
-	public function addVirtualPad(?DPad:FlxDPadMode, ?Action:FlxActionMode) {
-		_virtualpad = new FlxVirtualPad(DPad, Action);
-		_virtualpad.alpha = 0.75;
-		add(_virtualpad);
-		controls.setVirtualPadUI(_virtualpad, DPad, Action);
-		trackedinputsUI = controls.trackedinputsUI;
-		controls.trackedinputsUI = [];
-	}
-	
-	override function destroy() {
-		controls.removeFlxInput(trackedinputsUI);
-		controls.removeFlxInput(trackedinputs);		
-		
-		super.destroy();
-	}
-	#end	
 
 	override function update(elapsed:Float)
 	{
